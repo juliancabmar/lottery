@@ -180,6 +180,10 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
         return i_interval;
     }
 
+    function getSubscriptionId() public view returns (uint256) {
+        return i_subscriptionId;
+    }
+
     function getNumWords() public pure returns (uint256) {
         return NUM_WORDS;
     }
