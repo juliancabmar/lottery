@@ -51,7 +51,7 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
     /* Events */
     event RaffleEnter(address indexed player);
     event RequestedRaffleWinner(uint256 indexed requestId);
-    event WinnerPiked(address indexed winner);
+    event WinnerPicked(address indexed winner);
 
     /* Functions */
     constructor(
@@ -155,7 +155,7 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
         if (!success) {
             revert Raffle__TransferFailed();
         }
-        emit WinnerPiked(recentWinner);
+        emit WinnerPicked(recentWinner);
     }
 
     /* View / Pure Functions */

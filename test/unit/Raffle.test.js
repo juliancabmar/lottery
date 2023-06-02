@@ -152,7 +152,44 @@ if (!developmentChains.includes(network.name)) {
                 const accounts = await ethers.getSigners()
                 for (let i = startingAccountIndex; i < startingAccountIndex + additionalsEntrants; i++) {
                     const accountConnectedRaffle = raffle.connect(accounts[i])
+                    await accountConnectedRaffle.enterRaffle({ value: raffleEntranceFee })
+                    // console.log(`Account[${i}]: ${accounts[i].address}`)
                 }
+                // Now are 4 accounts funding the raffle (including the deployer)
+                const starttingTimeStamp = await raffle.getLatestTimeStamp()
+
+                // performUpkeep (mock being Chainlink Keppers)
+                // fulfillRandomWords (mock being the Chainlink VRF)
+                // We will have to wait for the fulfillRandomWords to be called
+                await new Promise(async (resolve, reject) => {
+                    // Setting up the listener
+                    raffle.once("WinnerPicked", async () => {
+                        try {
+                            const recentWinner = await raffle.getRecentWinner()
+                            // console.log(`Recent Winner: ${recentWinner}`)
+                            const raffleState = await raffle.getRaffleState()
+                            const endingTimeStamp = await raffle.getLatestTimeStamp()
+                            const numOfPlayers = await raffle.getNumberOfPlayers()
+                            const winnerEndingBalance = await accounts[1].getBalance()
+                            // now the asserts
+                            assert.equal(raffleState.toString(), "0")
+                            assert.equal(numOfPlayers.toString(), "0")
+                            assert(endingTimeStamp > starttingTimeStamp)
+                            assert.equal(
+                                winnerEndingBalance.toString(),
+                                winnerStartingBalance.add(raffleEntranceFee.mul(additionalsEntrants).add(raffleEntranceFee).toString())
+                            )
+                            resolve()
+                        } catch (e) {
+                            reject(e)
+                        }
+                    })
+                    // below, we will fire the event, and the listener will pick it up, and resolve
+                    const tx = await raffle.performUpkeep([])
+                    const txReceipt = await tx.wait(1)
+                    const winnerStartingBalance = await accounts[1].getBalance()
+                    await vrfCoordinatorV2Mock.fulfillRandomWords(txReceipt.events[1].args.requestId, raffle.address)
+                })
             })
         })
     })
