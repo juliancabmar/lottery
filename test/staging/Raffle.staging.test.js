@@ -28,9 +28,17 @@ if (developmentChains.includes(network.name)) {
                         try {
                             const recentWinner = await raffle.getRecentWinner()
                             const raffleState = await raffle.getRaffleState()
+                            const winnerEndingBalance = await accounts[0].getBalance()
                             const endingTimeStamp = await raffle.getLatestTimeStamp()
-                            const numOfPlayers = await raffle.getNumberOfPlayers()
-                            const winnerBalance = await accounts[0].getBalance()
+                            // Now lets do some comparisions
+                            // the next line will must be reverted because we can't get a item of a empty array
+                            await expect(raffle.getPlayer(0)).to.be.reverted
+                            assert.equal(recentWinner.toString(), accounts[0].address)
+                            assert.equal(raffleState.toString(), "0")
+                            assert.equal(
+                                winnerEndingBalance.toString(),
+                                winnerStartingBalance.add(raffleEntranceFee.mul(additionalsEntrants).add(raffleEntranceFee).toString())
+                            )
                             resolve()
                         } catch (e) {
                             reject(e)
@@ -38,6 +46,7 @@ if (developmentChains.includes(network.name)) {
                     })
                     // below, we will fire the event, and the listener will pick it up, and resolve
                     await raffle.enterRaffle({ value: raffleEntranceFee })
+                    const winnerStartingBalance = await accounts[0].getBalance()
                 })
             })
         })

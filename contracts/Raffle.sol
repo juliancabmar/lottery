@@ -199,4 +199,18 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
     function getRequestConfirmations() public pure returns (uint256) {
         return REQUEST_CONFIRMATIONS;
     }
+
+    function getIsReadyForUpkeep() public view returns (bool) {
+        bool isOpen = (s_raffleState == RaffleState.OPEN);
+        bool timePased = ((block.timestamp - s_lastTimeStamp) > i_interval);
+        bool hasPlayers = (s_players.length > 0);
+        bool hasBalance = (address(this).balance > 0);
+
+        bool upkeepNeeded = (isOpen && timePased && hasPlayers && hasBalance);
+        return upkeepNeeded;
+    }
+
+    function getBlockTimestamp() public view returns (uint256) {
+        return block.timestamp;
+    }
 }
