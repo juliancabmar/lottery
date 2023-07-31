@@ -21,17 +21,21 @@ module.exports = {
         hardhat: {
             chainId: 31337,
             blockConfirmations: 1,
+            allowUnlimitedContractSize: true,
         },
         localhost: {
             url: "http://localhost:8545",
             chainId: 31337,
             blockConfirmations: 1,
+            allowUnlimitedContractSize: true,
         },
         sepolia: {
             url: SEPOLIA_RPC_URL,
             accounts: [SEPOLIA_PRIVATE_KEY],
             chainId: Number(SEPOLIA_CHAIN_ID),
             blockConfirmations: 6,
+            allowUnlimitedContractSize: true,
+            saveDeployments: true,
         },
     },
 

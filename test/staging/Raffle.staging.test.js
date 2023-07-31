@@ -18,34 +18,36 @@ if (developmentChains.includes(network.name)) {
         describe("fulfillRandomWords()", function () {
             it("works with live Chainlink Keepers and Chainlink VRF, we get a random winner", async function () {
                 // enter the raffle
-                const starttingTimeStamp = await raffle.getLatestTimeStamp()
+                const startingTimeStamp = await raffle.getLastTimeStamp()
                 const accounts = await ethers.getSigners()
 
                 await new Promise(async (resolve, reject) => {
                     // Setting up the listener
                     raffle.once("WinnerPicked", async () => {
-                        console.log("Winner Picked, event fired!")
+                        console.log("WinnerPicked event fired!")
                         try {
+                            // add our asserts here
                             const recentWinner = await raffle.getRecentWinner()
                             const raffleState = await raffle.getRaffleState()
                             const winnerEndingBalance = await accounts[0].getBalance()
-                            const endingTimeStamp = await raffle.getLatestTimeStamp()
-                            // Now lets do some comparisions
-                            // the next line will must be reverted because we can't get a item of a empty array
+                            const endingTimeStamp = await raffle.getLastTimeStamp()
+
                             await expect(raffle.getPlayer(0)).to.be.reverted
                             assert.equal(recentWinner.toString(), accounts[0].address)
-                            assert.equal(raffleState.toString(), "0")
-                            assert.equal(
-                                winnerEndingBalance.toString(),
-                                winnerStartingBalance.add(raffleEntranceFee.mul(additionalsEntrants).add(raffleEntranceFee).toString())
-                            )
+                            assert.equal(raffleState, 0)
+                            assert.equal(winnerEndingBalance.toString(), winnerStartingBalance.add(raffleEntranceFee).toString())
+                            assert(endingTimeStamp > startingTimeStamp)
                             resolve()
-                        } catch (e) {
-                            reject(e)
+                        } catch (error) {
+                            console.log(error)
+                            reject(error)
                         }
                     })
-                    // below, we will fire the event, and the listener will pick it up, and resolve
-                    await raffle.enterRaffle({ value: raffleEntranceFee })
+                    // Then entering the raffle
+                    console.log("Entering Raffle...")
+                    const tx = await raffle.enterRaffle({ value: raffleEntranceFee })
+                    await tx.wait(1)
+                    console.log("Ok, time to wait...")
                     const winnerStartingBalance = await accounts[0].getBalance()
                 })
             })

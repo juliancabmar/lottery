@@ -31,13 +31,13 @@ if (!developmentChains.includes(network.name)) {
 
                 // We cast the contract values to String for prevent posible comparision errors
                 assert.equal(raffleState.toString(), "0")
-                assert.equal(interval.toString(), currentNetwork.interval)
+                assert.equal(interval.toString(), currentNetwork.keepersUpdateInterval)
             })
         })
 
         describe("enterRaffle()", function () {
             it("reverts when you don't pay enough", async function () {
-                await expect(raffle.enterRaffle()).to.be.revertedWith("Raffle__NotEnoughETHEntered")
+                await expect(raffle.enterRaffle()).to.be.revertedWith("Raffle__SendMoreToEnterRaffle")
             })
 
             it("records players when they enter", async function () {
@@ -60,7 +60,7 @@ if (!developmentChains.includes(network.name)) {
                 // So, now we can call performUpKeep() and change the raffleState to "CALCULATING"
                 await raffle.performUpkeep([])
                 // and this make enterRaffle() be reverted, making this unit test a success
-                await expect(raffle.enterRaffle({ value: raffleEntranceFee })).to.be.revertedWith("Raffle__NotOpen")
+                await expect(raffle.enterRaffle({ value: raffleEntranceFee })).to.be.revertedWith("Raffle__RaffleNotOpen")
             })
         })
 
@@ -112,7 +112,7 @@ if (!developmentChains.includes(network.name)) {
                 await raffle.enterRaffle({ value: raffleEntranceFee })
                 await network.provider.send("evm_increaseTime", [interval.toNumber() + 1])
                 await network.provider.send("evm_mine", [])
-                const tx = await raffle.performUpkeep([])
+                const tx = await raffle.performUpkeep("0x")
                 assert(tx)
             })
 
@@ -156,7 +156,7 @@ if (!developmentChains.includes(network.name)) {
                     // console.log(`Account[${i}]: ${accounts[i].address}`)
                 }
                 // Now are 4 accounts funding the raffle (including the deployer)
-                const starttingTimeStamp = await raffle.getLatestTimeStamp()
+                const starttingTimeStamp = await raffle.getLastTimeStamp()
 
                 // performUpkeep (mock being Chainlink Keppers)
                 // fulfillRandomWords (mock being the Chainlink VRF)
@@ -168,7 +168,7 @@ if (!developmentChains.includes(network.name)) {
                             const recentWinner = await raffle.getRecentWinner()
                             // console.log(`Recent Winner: ${recentWinner}`)
                             const raffleState = await raffle.getRaffleState()
-                            const endingTimeStamp = await raffle.getLatestTimeStamp()
+                            const endingTimeStamp = await raffle.getLastTimeStamp()
                             const numOfPlayers = await raffle.getNumberOfPlayers()
                             const winnerEndingBalance = await accounts[1].getBalance()
                             // now the asserts

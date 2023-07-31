@@ -1,19 +1,15 @@
-const { getNamedAccounts, ethers, deployments } = require("hardhat")
+const { getNamedAccounts, ethers } = require("hardhat")
 
 async function main() {
-    let raffle, vrfCoordinatorV2Mock, raffleEntranceFee, deployer, interval, subscriptionId
+    let raffle, raffleEntranceFee, deployer
 
     deployer = (await getNamedAccounts()).deployer
-
-    await deployments.fixture(["all"])
     raffle = await ethers.getContract("Raffle", deployer)
     raffleEntranceFee = await raffle.getEntranceFee()
-    interval = await raffle.getInterval()
-    subscriptionId = await raffle.getSubscriptionId()
-    vrfCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock", deployer)
-    await vrfCoordinatorV2Mock.addConsumer(subscriptionId.toNumber(), raffle.address)
 
-    console.log(await raffle.checkUpkeep([]))
+    const txResponse = await raffle.performUpkeep([])
+    const txReceipt = await txResponse.wait(1)
+    console.log(txReceipt)
 }
 
 main().catch((e) => console.log(e))
